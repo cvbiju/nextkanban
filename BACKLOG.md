@@ -6,7 +6,7 @@
 
 ## 🔴 Priority 1 — Critical (Production Hardening)
 
-- [ ] **Adopt Prisma Migrations**
+- [x] **Adopt Prisma Migrations**
   - Replace `prisma db push` with `prisma migrate dev` to generate versioned migration files
   - Commit migration files to git to prevent accidental data loss on schema changes
   - Est: ~1 hour | Cost impact: $0
