@@ -51,64 +51,82 @@ function LoginContent() {
             height: '100vh',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'linear-gradient(135deg, var(--md-sys-color-primary-container) 0%, var(--md-sys-color-background) 100%)',
+            background: 'linear-gradient(135deg, #fdf2f2 0%, #f4f5f7 50%, #eef2f8 100%)',
             position: 'relative',
             overflow: 'hidden'
         }}>
-            {/* Decorative background blobs (Google Colors) */}
-            <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '40vw', height: '40vw', background: '#4285F4', opacity: 0.08, filter: 'blur(80px)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '40vw', height: '40vw', background: '#EA4335', opacity: 0.08, filter: 'blur(80px)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '50vw', height: '50vw', background: '#FBBC05', opacity: 0.08, filter: 'blur(100px)', borderRadius: '50%' }} />
-            <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50vw', height: '50vw', background: '#34A853', opacity: 0.08, filter: 'blur(100px)', borderRadius: '50%' }} />
+            {/* Insight-themed decorative blobs */}
+            <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '40vw', height: '40vw', background: '#D3202A', opacity: 0.06, filter: 'blur(80px)', borderRadius: '50%', zIndex: 0 }} />
+            <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '40vw', height: '40vw', background: '#005E85', opacity: 0.06, filter: 'blur(80px)', borderRadius: '50%', zIndex: 0 }} />
+            <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '50vw', height: '50vw', background: '#172B4D', opacity: 0.04, filter: 'blur(100px)', borderRadius: '50%', zIndex: 0 }} />
+            <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '50vw', height: '50vw', background: '#D3202A', opacity: 0.04, filter: 'blur(100px)', borderRadius: '50%', zIndex: 0 }} />
 
-            <div className="modal-surface" style={{ width: '100%', maxWidth: '420px', padding: 0, transform: 'none', position: 'relative', zIndex: 1, boxShadow: '0 24px 64px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)', backgroundColor: 'var(--md-sys-color-surface)' }}>
-                {/* Google 4-color strip */}
-                <div style={{ display: 'flex', height: '6px', width: '100%' }}>
-                    <div style={{ flex: 1, backgroundColor: '#4285F4' }} />
-                    <div style={{ flex: 1, backgroundColor: '#EA4335' }} />
-                    <div style={{ flex: 1, backgroundColor: '#FBBC05' }} />
-                    <div style={{ flex: 1, backgroundColor: '#34A853' }} />
-                </div>
+            <div style={{
+                width: '100%',
+                maxWidth: '420px',
+                position: 'relative',
+                zIndex: 1,
+                boxShadow: '0 20px 60px rgba(9,30,66,0.15)',
+                border: '1px solid rgba(255,255,255,0.6)',
+                backgroundColor: '#ffffff',
+                borderRadius: '8px',
+                overflow: 'hidden'
+            }}>
+                {/* Insight Red accent bar */}
+                <div style={{ height: '5px', width: '100%', backgroundColor: '#D3202A' }} />
 
-                <div style={{ padding: '48px 32px' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', backgroundColor: 'var(--md-sys-color-primary-container)', color: 'var(--md-sys-color-on-primary-container)', borderRadius: '16px', marginBottom: '24px' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: '#4285F4' }}>dashboard</span>
+                <div style={{ padding: '48px 36px' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+                        {/* Logo icon */}
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '60px',
+                            height: '60px',
+                            backgroundColor: '#FEF2F2',
+                            borderRadius: '12px',
+                            marginBottom: '20px'
+                        }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '30px', color: '#D3202A' }}>dashboard</span>
                         </div>
-                        <h1 className="title-large" style={{ color: 'var(--md-sys-color-on-surface)', fontWeight: 600, fontSize: '28px', marginBottom: '8px' }}>
-                            <span style={{ color: '#4285F4' }}>K</span>
-                            <span style={{ color: '#EA4335' }}>a</span>
-                            <span style={{ color: '#FBBC05' }}>n</span>
-                            <span style={{ color: '#4285F4' }}>b</span>
-                            <span style={{ color: '#34A853' }}>a</span>
-                            <span style={{ color: '#EA4335' }}>n</span>
-                            <span style={{ color: '#FBBC05' }}>2.0</span>
+
+                        <h1 style={{
+                            margin: '0 0 8px 0',
+                            fontSize: '26px',
+                            fontWeight: 700,
+                            color: '#172B4D',
+                            letterSpacing: '-0.02em',
+                            fontFamily: 'inherit'
+                        }}>
+                            Kanban<span style={{ color: '#D3202A' }}>2.0</span>
                         </h1>
-                        <p className="body-medium text-variant">Sign in to continue to your workspace</p>
+                        <p style={{ margin: 0, fontSize: '14px', color: '#6B778C' }}>Sign in to continue to your workspace</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="modal-form">
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                         {successMessage && (
-                            <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: 'var(--md-sys-color-primary-container)', color: 'var(--md-sys-color-on-primary-container)', borderRadius: '8px', fontSize: '14px' }}>
+                            <div style={{ padding: '12px 14px', marginBottom: '20px', backgroundColor: '#E3FCEF', color: '#006644', borderRadius: '6px', fontSize: '14px', border: '1px solid #ABF5D1' }}>
                                 {successMessage}
                             </div>
                         )}
                         {error && (
-                            <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: 'var(--md-sys-color-error-container)', color: 'var(--md-sys-color-on-error-container)', borderRadius: '8px', fontSize: '14px' }}>
+                            <div style={{ padding: '12px 14px', marginBottom: '20px', backgroundColor: '#FFEBE6', color: '#BF2600', borderRadius: '6px', fontSize: '14px', border: '1px solid #FFBDAD' }}>
                                 {error}
                             </div>
                         )}
 
-                        <label className="body-medium">Email address</label>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#172B4D', marginBottom: '6px' }}>Email address</label>
                         <input
                             type="email"
                             className="custom-input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            style={{ marginBottom: '18px' }}
                         />
 
-                        <label className="body-medium" style={{ marginTop: '16px' }}>Password</label>
+                        <label style={{ fontSize: '13px', fontWeight: 600, color: '#172B4D', marginBottom: '6px' }}>Password</label>
                         <input
                             type="password"
                             className="custom-input"
@@ -119,18 +137,31 @@ function LoginContent() {
 
                         <button
                             type="submit"
-                            style={{ marginTop: '32px', width: '100%', padding: '12px', backgroundColor: '#4285F4', color: '#ffffff', border: 'none', borderRadius: '24px', fontSize: '14px', fontWeight: 500, cursor: 'pointer', transition: 'background-color 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            style={{
+                                marginTop: '28px',
+                                width: '100%',
+                                padding: '13px',
+                                backgroundColor: '#D3202A',
+                                color: '#ffffff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                cursor: isLoading ? 'not-allowed' : 'pointer',
+                                opacity: isLoading ? 0.75 : 1,
+                                transition: 'background-color 0.15s, opacity 0.15s',
+                                letterSpacing: '0.01em'
+                            }}
                             disabled={isLoading}
-                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#3367D6'}
-                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4285F4'}
+                            onMouseOver={(e) => { if (!isLoading) e.currentTarget.style.backgroundColor = '#B51C24'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#D3202A'; }}
                         >
                             {isLoading ? 'Signing In...' : 'Sign In'}
                         </button>
-
                     </form>
 
                     <div style={{ marginTop: '24px', textAlign: 'center' }}>
-                        <Link href="/register" className="body-medium" style={{ color: '#4285F4', textDecoration: 'none', fontWeight: 500 }}>
+                        <Link href="/register" style={{ color: '#D3202A', textDecoration: 'none', fontSize: '14px', fontWeight: 500 }}>
                             Don't have an account? Register here
                         </Link>
                     </div>
