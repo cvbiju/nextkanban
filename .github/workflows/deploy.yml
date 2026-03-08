@@ -45,10 +45,10 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Deploy to Cloud Run
-        run: |
           gcloud run deploy next-kanban \
             --source . \
             --region us-central1 \
             --project antigravity-myfirstproj \
             --allow-unauthenticated \
-            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }},NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }},NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            --update-env-vars NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+            --update-secrets DATABASE_URL=DATABASE_URL:latest,NEXTAUTH_SECRET=NEXTAUTH_SECRET:latest
