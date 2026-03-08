@@ -52,4 +52,4 @@ jobs:
             --project antigravity-myfirstproj \
             --allow-unauthenticated \
             --update-env-vars NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
-            --update-secrets DATABASE_URL=DATABASE_URL:latest,NEXTAUTH_SECRET=NEXTAUTH_SECRET:latest
+            --set-secrets DATABASE_URL=DATABASE_URL:latest,NEXTAUTH_SECRET=NEXTAUTH_SECRET:latest
