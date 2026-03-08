@@ -21,22 +21,21 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }: 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const isAdmin = (session?.user as any)?.role === 'ADMIN';
+    const isEditingSelf = userToEdit && userToEdit.id === session?.user?.id;
+
     useEffect(() => {
         if (isOpen) {
             if (userToEdit) {
                 setName(userToEdit.name || '');
                 setEmail(userToEdit.email || '');
                 setRole(userToEdit.role || 'USER');
-                setIsActive(userToEdit.isActive === undefined ? true : Boolean(userToEdit.isActive)); // Explicitly cast the original DB state to true/false, defaulting to true
-                setPassword(''); // Don't prefill password
+                setIsActive(userToEdit.isActive === undefined ? true : Boolean(userToEdit.isActive));
+                setPassword('');
                 setImage(userToEdit.image || '');
             } else {
-                setName('');
-                setEmail('');
-                setRole('USER');
-                setIsActive(true);
-                setPassword('');
-                setImage('');
+                setName(''); setEmail(''); setRole('USER');
+                setIsActive(true); setPassword(''); setImage('');
             }
             setError('');
         }
@@ -46,9 +45,7 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }: 
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setImage(reader.result as string);
-            };
+            reader.onloadend = () => setImage(reader.result as string);
             reader.readAsDataURL(file);
         }
     };
@@ -62,11 +59,8 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }: 
         const endpoint = isEditing ? `/api/users/${userToEdit.id}` : '/api/users';
         const method = isEditing ? 'PUT' : 'POST';
 
-        // Prepare payload - don't send empty password on edit
         const payload: any = { name, email, role, image, isActive };
-        if (!isEditing || password.trim() !== '') {
-            payload.password = password;
-        }
+        if (!isEditing || password.trim() !== '') payload.password = password;
 
         try {
             const res = await fetch(endpoint, {
@@ -76,18 +70,16 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }: 
             });
 
             if (res.ok) {
-                // Force session sync if user alters themselves from the admin panel
                 if (isEditing && session?.user?.id === userToEdit.id) {
                     await update({ name, image });
                 }
-
                 onUserSaved();
                 onClose();
             } else {
                 const data = await res.json();
                 setError(data.error || `Failed to ${isEditing ? 'update' : 'create'} user`);
             }
-        } catch (error) {
+        } catch {
             setError("An unexpected error occurred");
         } finally {
             setIsLoading(false);
@@ -97,120 +89,118 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }: 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={userToEdit ? "Edit User" : "Create New User"}>
             <form onSubmit={handleSubmit} className="modal-form">
-                {error && <div style={{ color: 'var(--md-sys-color-error)', fontSize: '14px', marginBottom: '8px' }}>{error}</div>}
-
-                <label className="body-medium">Full Name</label>
-                <input
-                    className="custom-input"
-                    type="text"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    required
-                    placeholder="Jane Doe"
-                />
-
-                <label className="body-medium">Email Address</label>
-                <input
-                    className="custom-input"
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    placeholder="jane@example.com"
-                />
-
-                <label className="body-medium">Profile Image (Optional)</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    {(image || (userToEdit && userToEdit.image)) && (
-                        <div style={{ width: '48px', height: '48px', overflow: 'hidden', borderRadius: '50%', flexShrink: 0, border: '1px solid var(--md-sys-color-outline-variant)' }}>
-                            <img src={image || userToEdit.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                    )}
-                    <label className="btn text-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>upload</span>
-                        {image ? 'Change Image' : 'Upload Image'}
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                            style={{ display: 'none' }}
-                        />
-                    </label>
-                    {image && (
-                        <button type="button" className="icon-btn small" onClick={() => setImage('')} title="Remove Image" style={{ color: 'var(--md-sys-color-error)' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
-                        </button>
-                    )}
-                </div>
-
-                <label className="body-medium">
-                    Password {userToEdit && <span className="text-variant" style={{ fontSize: '12px' }}>(Leave blank to keep current)</span>}
-                </label>
-                <input
-                    className="custom-input"
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required={!userToEdit}
-                    placeholder="••••••••"
-                />
-
-                {(session?.user as any)?.role === 'ADMIN' && (
-                    <>
-                        <label className="body-medium" style={{ marginTop: '16px' }}>Account Role</label>
-                        <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
-                                <input
-                                    type="radio"
-                                    name="role"
-                                    value="USER"
-                                    checked={role === 'USER'}
-                                    onChange={() => setRole('USER')}
-                                />
-                                <span className="body-medium">Standard User</span>
-                            </label>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', margin: 0 }}>
-                                <input
-                                    type="radio"
-                                    name="role"
-                                    value="ADMIN"
-                                    checked={role === 'ADMIN'}
-                                    onChange={() => setRole('ADMIN')}
-                                />
-                                <span className="body-medium">Administrator</span>
-                            </label>
-                        </div>
-                    </>
+                {error && (
+                    <div style={{
+                        padding: '10px 14px', marginBottom: '16px',
+                        backgroundColor: '#FFEBE6', color: '#BF2600',
+                        borderRadius: '6px', fontSize: '13px',
+                        border: '1px solid #FFBDAD'
+                    }}>
+                        {error}
+                    </div>
                 )}
 
-                {(session?.user as any)?.role === 'ADMIN' && userToEdit && userToEdit.id !== session?.user?.id && (
-                    <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <label className="switch" style={{ position: 'relative', display: 'inline-block', width: '40px', height: '20px' }}>
+                {/* Name + Email row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B778C', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>Full Name</label>
+                        <input className="custom-input" type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Jane Doe" />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B778C', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>Email Address</label>
+                        <input className="custom-input" type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="jane@example.com" />
+                    </div>
+                </div>
+
+                {/* Password */}
+                <div style={{ marginTop: '16px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B778C', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
+                        Password {userToEdit && <span style={{ fontWeight: 400, textTransform: 'none', fontSize: '11px' }}>(leave blank to keep current)</span>}
+                    </label>
+                    <input className="custom-input" type="password" value={password} onChange={e => setPassword(e.target.value)} required={!userToEdit} placeholder="••••••••" />
+                </div>
+
+                {/* Profile Image */}
+                <div style={{ marginTop: '16px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B778C', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Profile Image</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', border: '1px solid var(--sys-color-outline)', borderRadius: 'var(--sys-shape-corner-small)', backgroundColor: '#FAFBFC' }}>
+                        {(image || (userToEdit?.image)) ? (
+                            <img src={image || userToEdit.image} alt="Preview" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                        ) : (
+                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#DFE1E6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: '#6B778C' }}>person</span>
+                            </div>
+                        )}
+                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--sys-color-primary)', fontWeight: 500 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>upload</span>
+                            {image ? 'Change photo' : 'Upload photo'}
+                            <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                        </label>
+                        {image && (
+                            <button type="button" onClick={() => setImage('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#BF2600', padding: '4px', display: 'flex', alignItems: 'center' }} title="Remove">
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>delete</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Account Role - admin only */}
+                {isAdmin && (
+                    <div style={{ marginTop: '20px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B778C', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '8px' }}>Account Role</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <label className={`role-option ${role === 'USER' ? 'selected' : ''}`}>
+                                <input type="radio" name="role" value="USER" checked={role === 'USER'} onChange={() => setRole('USER')} />
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person</span>
+                                <span style={{ fontSize: '13px', fontWeight: 500 }}>Standard User</span>
+                            </label>
+                            <label className={`role-option ${role === 'ADMIN' ? 'selected' : ''}`}>
+                                <input type="radio" name="role" value="ADMIN" checked={role === 'ADMIN'} onChange={() => setRole('ADMIN')} />
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>shield_person</span>
+                                <span style={{ fontSize: '13px', fontWeight: 500 }}>Administrator</span>
+                            </label>
+                        </div>
+                    </div>
+                )}
+
+                {/* Active/Inactive toggle - admin only, not self */}
+                {isAdmin && userToEdit && !isEditingSelf && (
+                    <div style={{
+                        marginTop: '20px', padding: '14px 16px',
+                        backgroundColor: isActive ? '#E3FCEF' : '#FFEBE6',
+                        borderRadius: 'var(--sys-shape-corner-medium)',
+                        border: `1px solid ${isActive ? '#ABF5D1' : '#FFBDAD'}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        transition: 'all 0.2s ease'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px', color: isActive ? '#006644' : '#BF2600' }}>
+                                {isActive ? 'check_circle' : 'block'}
+                            </span>
+                            <div>
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: isActive ? '#006644' : '#BF2600' }}>
+                                    {isActive ? 'Account Active' : 'Account Disabled'}
+                                </div>
+                                <div style={{ fontSize: '11px', color: isActive ? '#006644' : '#BF2600', opacity: 0.8 }}>
+                                    {isActive ? 'User can log in' : 'User cannot log in'}
+                                </div>
+                            </div>
+                        </div>
+                        <label className="toggle-switch">
                             <input
                                 type="checkbox"
                                 checked={isActive}
                                 onChange={(e) => setIsActive(e.target.checked)}
-                                style={{ opacity: 0, width: 0, height: 0 }}
                             />
-                            <span className={`slider round ${isActive ? 'checked' : ''}`} style={{
-                                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                                backgroundColor: isActive ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-outline)',
-                                transition: '.4s', borderRadius: '20px'
-                            }}>
-                                <span style={{
-                                    position: 'absolute', content: '""', height: '16px', width: '16px',
-                                    left: isActive ? '22px' : '2px', bottom: '2px', backgroundColor: 'white',
-                                    transition: '.4s', borderRadius: '50%'
-                                }} />
-                            </span>
+                            <span className="toggle-track" />
                         </label>
-                        <span className="body-medium">Account is {isActive ? 'Active' : 'Disabled'}</span>
                     </div>
                 )}
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '24px' }}>
+                {/* Actions */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '28px', paddingTop: '16px', borderTop: '1px solid var(--sys-color-outline-variant)' }}>
                     <button type="button" className="btn text-btn" onClick={onClose} disabled={isLoading}>Cancel</button>
-                    <button type="submit" className="btn filled-btn" disabled={isLoading}>
+                    <button type="submit" className="btn filled-btn" disabled={isLoading} style={{ minWidth: '100px' }}>
                         {isLoading ? 'Saving...' : (userToEdit ? 'Save Changes' : 'Create Account')}
                     </button>
                 </div>
