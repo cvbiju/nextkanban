@@ -45,6 +45,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Deploy to Cloud Run
+        run: |
           gcloud run deploy next-kanban \
             --source . \
             --region us-central1 \
