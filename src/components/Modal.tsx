@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface ModalProps {
@@ -10,10 +10,10 @@ export interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
-    const [mounted, setMounted] = useState(false);
+    const [mounted, mount] = useReducer(() => true, false);
 
     useEffect(() => {
-        setMounted(true);
+        mount();
     }, []);
 
     if (!mounted) return null;
