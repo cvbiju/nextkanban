@@ -2,12 +2,12 @@
 
 ## 1. What Did We Build?
 
-**Kanban 2.0** — a full-stack, production-ready Project & Task Management application built and deployed to the cloud in a single day.
+**Next.js Kanban** — a full-stack, production-ready Project & Task Management application built and deployed to the cloud. This is a Next.js migration of our original static Kanban prototype.
 
 It is a dynamic, multi-user workspace where teams can organize work across projects using a Kanban-style board (To Do → In Progress → Done). The application features secure authentication, role-based access control, a rich task management system with notes and media uploads, and a polished Material Design 3 UI with gradient-bordered panels.
 
 The live production app is available at:
-👉 **https://next-kanban-611323086952.us-central1.run.app**
+👉 **https://next-kanban-25f3zmccwa-uc.a.run.app**
 
 ---
 
@@ -32,6 +32,7 @@ The live production app is available at:
 | Layer | Technology |
 |-------|------------|
 | Hosting | **Google Cloud Run** (containerized, scales to zero) |
+| CI/CD Pipeline | **GitHub Actions** (auto-builds and deploys to Cloud Run on push to main) |
 | Container Build | Next.js `standalone` output mode |
 | Source Control | **GitHub** — https://github.com/cvbiju/nextkanban |
 
@@ -69,7 +70,7 @@ NextAuth.js session tokens ─────────────────�
 |---------|------|
 | **Google Cloud Run** (Next.js app server) | **$0** (scales to zero; free tier covers ~2M requests/month) |
 | **Neon PostgreSQL** (database) | **$0** (free tier; scales to zero when idle) |
-| **GitHub** (source control) | **$0** (public repo) |
+| **GitHub** (source control + Actions) | **$0** (public repo) |
 | **Total** | **~$0 / month** 🎉 |
 
 > **Note:** Neon's free tier "cold-starts" the database after a period of inactivity. The very first login after a long idle period may take 1–2 extra seconds — this is normal and only affects the first request.
@@ -86,4 +87,5 @@ The entire application — from a blank `create-next-app` scaffold to a fully de
 - ✅ Building full CRUD for Users, Projects, Tasks, and Notes
 - ✅ Provisioning and configuring Google Cloud Run + Cloud SQL (PostgreSQL)
 - ✅ Migrating the database to Neon serverless to reduce cost to $0
+- ✅ Setting up a GitHub Actions CI/CD pipeline for automated deployments
 - ✅ Checking all source code into GitHub
