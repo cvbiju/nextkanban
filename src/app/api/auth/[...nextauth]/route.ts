@@ -83,7 +83,18 @@ export const authOptions: NextAuthOptions = {
             return session;
         }
     },
-    pages: { signIn: '/login' }
+    pages: { signIn: '/login' },
+    cookies: {
+        sessionToken: {
+            name: `__session`,
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: true
+            }
+        }
+    }
 };
 
 const handler = NextAuth(authOptions);

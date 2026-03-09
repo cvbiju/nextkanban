@@ -78,39 +78,77 @@ export default function ProjectMembersModal({ isOpen, onClose, projectId, projec
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Manage Members: ${projectName}`}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '300px' }}>
-                <input
-                    type="text"
-                    className="custom-input"
-                    placeholder="Search users..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', overflow: 'hidden' }}>
+                <div style={{ position: 'relative' }}>
+                    <span className="material-symbols-outlined" style={{
+                        position: 'absolute',
+                        left: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontSize: '20px',
+                        color: 'var(--text-variant)'
+                    }}>search</span>
+                    <input
+                        type="text"
+                        className="custom-input"
+                        placeholder="Search users by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ width: '100%', paddingLeft: '40px' }}
+                    />
+                </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flexGrow: 1 }}>
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    overflowY: 'auto',
+                    flexGrow: 1,
+                    paddingRight: '8px',
+                    maxHeight: '450px' // Ensure scrollbar appears
+                }}>
                     {filteredUsers.map(user => {
                         const isMember = localMemberIds.has(user.id);
 
                         return (
-                            <div key={user.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', border: '1px solid var(--md-sys-color-outline-variant)', borderRadius: '12px' }}>
+                            <div key={user.id} style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '12px',
+                                border: '1px solid var(--sys-color-outline-variant)',
+                                borderRadius: '12px',
+                                backgroundColor: 'var(--sys-color-surface)'
+                            }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     {user.image ? (
-                                        <img src={user.image} alt="Avatar" style={{ width: '75px', height: '75px', borderRadius: '50%', objectFit: 'cover' }} />
+                                        <img src={user.image} alt="Avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                                     ) : (
-                                        <div style={{ width: '75px', height: '75px', borderRadius: '50%', backgroundColor: 'var(--md-sys-color-primary)', color: 'var(--md-sys-color-on-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 'bold' }}>
+                                        <div style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '50%',
+                                            backgroundColor: 'var(--sys-color-primary)',
+                                            color: 'white',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '16px',
+                                            fontWeight: 'bold'
+                                        }}>
                                             {(user.name || user.email || '?').charAt(0).toUpperCase()}
                                         </div>
                                     )}
-                                    <div>
-                                        <div className="title-medium" style={{ fontSize: '14px' }}>{user.name || "Unknown"}</div>
-                                        <div className="body-medium text-variant" style={{ fontSize: '12px' }}>{user.email}</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <div className="body-large" style={{ fontWeight: '600' }}>{user.name || "Unknown"}</div>
+                                        <div className="body-small text-variant">{user.email}</div>
                                     </div>
                                 </div>
                                 <button
                                     className={`btn ${isMember ? 'text-btn' : 'filled-btn'}`}
                                     onClick={() => isMember ? handleRemoveMember(user.id) : handleAddMember(user.id)}
                                     disabled={isLoading}
-                                    style={isMember ? { color: 'var(--md-sys-color-error)' } : {}}
+                                    style={isMember ? { color: 'var(--sys-color-status-critical)', padding: '6px 12px' } : { padding: '6px 12px' }}
                                 >
                                     {isMember ? 'Remove' : 'Add'}
                                 </button>
@@ -118,12 +156,15 @@ export default function ProjectMembersModal({ isOpen, onClose, projectId, projec
                         );
                     })}
                     {filteredUsers.length === 0 && (
-                        <div className="body-medium text-variant" style={{ textAlign: 'center', marginTop: '32px' }}>No users found.</div>
+                        <div className="body-medium text-variant" style={{ textAlign: 'center', marginTop: '32px', padding: '20px' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.2, display: 'block', marginBottom: '8px' }}>person_search</span>
+                            No users found matching "{searchTerm}"
+                        </div>
                     )}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-                    <button className="btn filled-tonal-btn" onClick={onClose}>Done</button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px', borderTop: '1px solid var(--sys-color-outline-variant)', paddingTop: '16px' }}>
+                    <button className="btn filled-btn" onClick={onClose} style={{ padding: '10px 24px' }}>Done</button>
                 </div>
             </div>
         </Modal>

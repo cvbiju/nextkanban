@@ -51,31 +51,144 @@ export default function ProjectsPage() {
     }
 
     return (
-        <div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+        <main style={{ padding: '32px', maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div>
+                    <h1 className="title-large" style={{ fontSize: '28px', color: 'var(--sys-color-on-background)' }}>Project Workspaces</h1>
+                    <p className="body-medium text-variant">Organize your tasks and collaborate with your team</p>
+                </div>
+                <button
+                    className="btn filled-btn"
+                    onClick={() => { setProjectToEdit(null); setIsProjectModalOpen(true); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', flexShrink: 0, whiteSpace: 'nowrap' }}
+                >
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>add</span>
+                    New Project
+                </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '32px' }}>
                 {projects.map(project => {
-                    // Check if the current user is a Global Admin OR a Project-Level Admin
                     const isProjectAdmin = role === 'ADMIN' || project.members?.some((m: any) => m.userId === session?.user?.id && m.role === 'ADMIN');
 
                     return (
-                        <div key={project.id} className="card elevated" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div className="card-state-layer"></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <h2 className="title-medium">{project.title}</h2>
+                        <div key={project.id} className="card" style={{
+                            padding: '0',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            border: '1px solid var(--sys-color-outline-variant)',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            backgroundColor: 'white'
+                        }}
+                            onMouseOver={e => {
+                                e.currentTarget.style.transform = 'translateY(-8px)';
+                                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)';
+                            }}
+                            onMouseOut={e => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                            }}>
+                            {/* Card Header with background accent */}
+                            <div style={{
+                                height: '80px',
+                                background: 'linear-gradient(135deg, #DFE1E6 0%, #FFFFFF 100%)',
+                                padding: '20px 24px',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start'
+                            }}>
+                                <div style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    backgroundColor: 'white',
+                                    borderRadius: '10px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                }}>
+                                    <span className="material-symbols-outlined" style={{ color: 'var(--sys-color-primary)', fontSize: '24px' }}>folder_open</span>
+                                </div>
                                 {isProjectAdmin && (
-                                    <button className="icon-btn small" onClick={() => handleEditProject(project)} title="Edit Project" style={{ marginTop: '-4px', marginRight: '-4px' }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>edit</span>
+                                    <button className="icon-btn" onClick={() => handleEditProject(project)} title="Edit Project" style={{ backgroundColor: 'white' }}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>settings</span>
                                     </button>
                                 )}
                             </div>
-                            <p className="body-medium text-variant">{project.description || "No description provided."}</p>
-                            <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span className="body-small text-variant">Members: {project.members?.length || 0}</span>
-                                {isProjectAdmin && (
-                                    <button className="btn text-btn" onClick={() => handleManageMembers(project)}>
-                                        Manage Members
-                                    </button>
-                                )}
+
+                            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--sys-color-on-surface)', margin: 0 }}>{project.title}</h2>
+                                <p style={{
+                                    fontSize: '14px',
+                                    color: 'var(--sys-color-on-surface-variant)',
+                                    margin: 0,
+                                    lineHeight: '1.6',
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    minHeight: '44px'
+                                }}>
+                                    {project.description || "No description provided."}
+                                </p>
+
+                                <div style={{
+                                    marginTop: '12px',
+                                    paddingTop: '20px',
+                                    borderTop: '1px solid var(--sys-color-outline-variant)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            {project.members?.slice(0, 3).map((member: any, i: number) => (
+                                                <img
+                                                    key={member.id}
+                                                    src={member.user?.image || `https://ui-avatars.com/api/?name=${member.user?.name || 'User'}&background=random`}
+                                                    alt="Member"
+                                                    style={{
+                                                        width: '28px',
+                                                        height: '28px',
+                                                        borderRadius: '50%',
+                                                        border: '2px solid white',
+                                                        marginLeft: i === 0 ? 0 : '-8px',
+                                                        zIndex: 3 - i
+                                                    }}
+                                                />
+                                            ))}
+                                            {project.members?.length > 3 && (
+                                                <div style={{
+                                                    width: '28px',
+                                                    height: '28px',
+                                                    borderRadius: '50%',
+                                                    backgroundColor: '#F4F5F7',
+                                                    border: '2px solid white',
+                                                    marginLeft: '-8px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    fontSize: '10px',
+                                                    fontWeight: '700',
+                                                    color: '#6B778C',
+                                                    zIndex: 0
+                                                }}>
+                                                    +{project.members.length - 3}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span style={{ fontSize: '13px', fontWeight: '500', color: '#6B778C' }}>
+                                            {project.members?.length || 0} Member{(project.members?.length !== 1) ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    {isProjectAdmin && (
+                                        <button className="btn text-btn" onClick={() => handleManageMembers(project)} style={{ fontSize: '13px', padding: '6px 12px' }}>
+                                            Manage Team
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );
@@ -103,6 +216,6 @@ export default function ProjectsPage() {
                     onMembersUpdated={fetchProjects}
                 />
             )}
-        </div>
+        </main>
     );
 }

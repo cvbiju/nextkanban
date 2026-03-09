@@ -3,10 +3,14 @@ import { withAuth } from "next-auth/middleware";
 export default withAuth({
     callbacks: {
         authorized({ req, token }) {
-            // Return true if the user is logged in, false otherwise
             return !!token;
         },
     },
+    cookies: {
+        sessionToken: {
+            name: `__session`,
+        }
+    }
 });
 
 export const config = {

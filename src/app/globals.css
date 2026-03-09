@@ -1,54 +1,57 @@
-/* Insight Enterprises Inspired Theme */
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
 @import '@fontsource/inter/700.css';
 
+* {
+    box-sizing: border-box;
+}
+
 :root {
-    /* Color Palette - Insight Red & Slate */
+    /* Color Palette - Vibrant & Premium */
     --sys-color-primary: #D3202A;
-    /* Insight Red */
     --sys-color-on-primary: #FFFFFF;
     --sys-color-primary-hover: #B51C24;
 
     --sys-color-secondary: #005E85;
-    /* Insight Blue */
     --sys-color-on-secondary: #FFFFFF;
 
-    --sys-color-background: #F4F5F7;
-    /* Jira/Monday soft gray */
+    --sys-color-background: #F8F9FA;
     --sys-color-on-background: #172B4D;
-    /* Deep slate */
 
     --sys-color-surface: #FFFFFF;
     --sys-color-on-surface: #172B4D;
-    --sys-color-surface-hover: #F8F9FA;
+    --sys-color-surface-hover: #F1F3F5;
 
     --sys-color-outline: #DFE1E6;
     --sys-color-outline-variant: #EBECF0;
 
-    /* Status Colors (Monday.com inspired) */
-    --sys-color-status-todo: #0073EA;
-    /* Blue */
-    --sys-color-status-inprogress: #FDAB3D;
-    /* Orange */
-    --sys-color-status-done: #00C875;
-    /* Green */
-    --sys-color-status-critical: #E2445C;
-    /* Red */
+    /* Status Colors */
+    --sys-color-status-todo: #4C9AFF;
+    --sys-color-status-inprogress: #FFAB00;
+    --sys-color-status-done: #36B37E;
+    --sys-color-status-critical: #FF5630;
 
-    /* Shapes - Crisp */
-    --sys-shape-corner-small: 4px;
-    --sys-shape-corner-medium: 6px;
-    --sys-shape-corner-large: 8px;
+    /* Shapes */
+    --sys-shape-corner-small: 6px;
+    --sys-shape-corner-medium: 10px;
+    --sys-shape-corner-large: 16px;
     --sys-shape-corner-full: 9999px;
 
-    /* Elevation - Subtle */
-    --sys-elevation-1: 0 1px 2px rgba(9, 30, 66, 0.12), 0 0 1px rgba(9, 30, 66, 0.24);
-    --sys-elevation-2: 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
-    --sys-elevation-dropdown: 0 8px 16px -4px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
+    /* Elevation */
+    --sys-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+    --sys-elevation-2: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --sys-elevation-3: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        Roboto,
+        sans-serif;
 }
 
 body {
@@ -108,7 +111,8 @@ body {
     display: flex;
     flex-direction: column;
     background-color: var(--sys-color-background);
-    overflow: hidden;
+    overflow-y: auto;
+    position: relative;
 }
 
 /* Nav Rail (Now a dense sidebar) */
@@ -506,11 +510,14 @@ body {
 
 .modal-surface {
     background-color: var(--sys-color-surface);
-    border-radius: var(--sys-shape-corner-large);
+    border-radius: var(--sys-color-surface);
     padding: 24px;
     width: 90%;
     max-width: 500px;
-    box-shadow: var(--sys-elevation-dropdown);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--sys-elevation-3);
     transform: translateY(0);
     transition: transform 0.15s ease;
 }

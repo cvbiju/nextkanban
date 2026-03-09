@@ -11,12 +11,12 @@
   - Commit migration files to git to prevent accidental data loss on schema changes
   - Est: ~1 hour | Cost impact: $0
 
-- [ ] **CI/CD Pipeline with GitHub Actions**
+- [x] **CI/CD Pipeline with GitHub Actions**
   - Auto-build and deploy to Cloud Run on every push to `main`
   - Add a basic lint/type-check step as a gate before deploy
   - Est: ~2 hours | Cost impact: $0
 
-- [ ] **Secrets via Google Secret Manager**
+- [x] **Secrets via Google Secret Manager**
   - Move `NEXTAUTH_SECRET` and `DATABASE_URL` out of CLI args and into Secret Manager
   - Configure Cloud Run to read secrets at runtime
   - Est: ~1 hour | Cost impact: ~$0.06/month

@@ -30,7 +30,8 @@ export async function GET(req: NextRequest) {
 
     const tasks = await prisma.task.findMany({
         where: { projectId },
-        include: { assignee: true }
+        include: { assignee: true },
+        orderBy: { order: 'asc' }
     });
 
     return NextResponse.json(tasks);
@@ -44,7 +45,30 @@ export async function POST(req: NextRequest) {
     try {
         const { projectId, title, description, priority, status, assigneeId } = await req.json();
 
-        // RBAC check omitted for brevity, assuming user has access if they get here via UI
+        // RBAC check: Ensure user is a member of the project
+        const globalRole = (session.user as any).role;
+        if (globalRole !== 'ADMIN') {
+            const membership = await prisma.projectMember.findUnique({
+                where: {
+                    projectId_userId: { projectId, userId: session.user.id }
+                }
+            });
+            if (!membership) {
+                return NextResponse.json({ error: "Forbidden: You are not a member of this project" }, { status: 403 });
+            }
+        }
+
+        // Determine the next highest order for new tasks created in TODO
+        const existingTasks = await prisma.task.findMany({
+            where: { projectId, status: status || 'TODO' },
+            orderBy: { order: 'desc' },
+            take: 1
+        });
+
+        let initialOrder = 1000;
+        if (existingTasks.length > 0) {
+            initialOrder = (existingTasks[0].order || 0) + 1000;
+        }
 
         const task = await prisma.task.create({
             data: {
@@ -53,7 +77,8 @@ export async function POST(req: NextRequest) {
                 description,
                 priority: priority || 'low',
                 status: status || 'TODO',
-                assigneeId: assigneeId || null
+                assigneeId: assigneeId || null,
+                order: initialOrder
             },
             include: { assignee: true }
         });
