@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        const { projectId, title, description, priority, status, assigneeId } = await req.json();
+        const { projectId, title, description, priority, status, assigneeId, startDate, dueDate, estimatedHours, actualHours, taskCategory, isBillable } = await req.json();
 
         // RBAC check: Ensure user is a member of the project
         const globalRole = (session.user as any).role;
@@ -78,7 +78,13 @@ export async function POST(req: NextRequest) {
                 priority: priority || 'low',
                 status: status || 'TODO',
                 assigneeId: assigneeId || null,
-                order: initialOrder
+                order: initialOrder,
+                startDate: startDate ? new Date(startDate) : null,
+                dueDate: dueDate ? new Date(dueDate) : null,
+                estimatedHours: estimatedHours ? parseFloat(estimatedHours) : null,
+                actualHours: actualHours ? parseFloat(actualHours) : 0,
+                taskCategory: taskCategory || null,
+                isBillable: isBillable === undefined ? true : Boolean(isBillable)
             },
             include: { assignee: true }
         });
@@ -96,11 +102,20 @@ export async function PUT(req: NextRequest) {
 
     try {
         const data = await req.json();
-        const { id, ...updateData } = data;
+        const { id, startDate, dueDate, estimatedHours, actualHours, isBillable, ...restUpdateData } = data;
+
+        // Safely parse specific fields if they are included in the update payload
+        const parsedUpdateData: any = { ...restUpdateData };
+
+        if (startDate !== undefined) parsedUpdateData.startDate = startDate ? new Date(startDate) : null;
+        if (dueDate !== undefined) parsedUpdateData.dueDate = dueDate ? new Date(dueDate) : null;
+        if (estimatedHours !== undefined) parsedUpdateData.estimatedHours = estimatedHours ? parseFloat(estimatedHours) : null;
+        if (actualHours !== undefined) parsedUpdateData.actualHours = actualHours ? parseFloat(actualHours) : 0;
+        if (isBillable !== undefined) parsedUpdateData.isBillable = Boolean(isBillable);
 
         const task = await prisma.task.update({
             where: { id },
-            data: updateData,
+            data: parsedUpdateData,
             include: { assignee: true }
         });
 

@@ -134,8 +134,38 @@ export default function ProjectsPage() {
                                     {project.description || "No description provided."}
                                 </p>
 
+                                {/* IT Services Metadata Section */}
+                                {(project.clientName || project.engagementModel || project.startDate || project.targetEndDate) && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                                        {project.clientName && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--sys-color-on-surface-variant)' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>business</span>
+                                                <span style={{ fontWeight: 500 }}>{project.clientName}</span>
+                                            </div>
+                                        )}
+                                        {project.engagementModel && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--sys-color-on-surface-variant)' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>request_quote</span>
+                                                <span>
+                                                    {project.engagementModel === 'FIXED_BID' ? 'Fixed Bid' :
+                                                        project.engagementModel === 'TIME_AND_MATERIALS' ? 'Time & Materials' : 'Retainer'}
+                                                    {project.totalBudget ? ` • $${project.totalBudget.toLocaleString()}` : ''}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {(project.startDate || project.targetEndDate) && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--sys-color-on-surface-variant)' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>calendar_today</span>
+                                                <span>
+                                                    {project.startDate ? new Date(project.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'} - {project.targetEndDate ? new Date(project.targetEndDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <div style={{
-                                    marginTop: '12px',
+                                    marginTop: '8px',
                                     paddingTop: '20px',
                                     borderTop: '1px solid var(--sys-color-outline-variant)',
                                     display: 'flex',

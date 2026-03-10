@@ -48,12 +48,17 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const { title, description } = await req.json();
+        const { title, description, clientName, startDate, targetEndDate, engagementModel, totalBudget } = await req.json();
 
         const project = await prisma.project.create({
             data: {
                 title,
                 description,
+                clientName: clientName || null,
+                startDate: startDate ? new Date(startDate) : null,
+                targetEndDate: targetEndDate ? new Date(targetEndDate) : null,
+                engagementModel: engagementModel || null,
+                totalBudget: totalBudget ? parseFloat(totalBudget) : null,
                 createdById: session.user.id,
                 members: {
                     create: [{ userId: session.user.id, role: 'ADMIN' }] // Creator is admin of project
@@ -75,7 +80,7 @@ export async function PUT(req: NextRequest) {
     }
 
     try {
-        const { id, title, description } = await req.json();
+        const { id, title, description, clientName, startDate, targetEndDate, engagementModel, totalBudget } = await req.json();
 
         if (!id) {
             return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
@@ -102,6 +107,11 @@ export async function PUT(req: NextRequest) {
             data: {
                 title,
                 description,
+                clientName: clientName || null,
+                startDate: startDate ? new Date(startDate) : null,
+                targetEndDate: targetEndDate ? new Date(targetEndDate) : null,
+                engagementModel: engagementModel || null,
+                totalBudget: totalBudget !== undefined && totalBudget !== null && totalBudget !== "" ? parseFloat(totalBudget) : null,
             }
         });
 

@@ -25,7 +25,17 @@
 
 ## 🟡 Priority 2 — Important (Feature & UX Gaps)
 
-- [ ] **Drag & Drop Task Cards**
+- [ ] **IT Services Fields: Update Project UI**
+  - Update `NewProjectModal` to include inputs for Client Name, Start/End Dates, Engagement Model, and Budget
+  - Update Project displays to show this metadata
+  - Est: ~2 hours | Cost impact: $0
+
+- [x] **IT Services Fields: Update Task UI**
+  - Update Task creation/editing forms to include estimated hours, actual hours, billable flag, and dates
+  - Show time estimates/actuals on Task Cards
+  - Est: ~2 hours | Cost impact: $0
+
+- [x] **Drag & Drop Task Cards**
   - Implement card drag between Kanban columns using `@dnd-kit`
   - Should update task `status` via PATCH API on drop
   - Est: ~3–4 hours | Cost impact: $0
@@ -69,6 +79,7 @@
 ## 💡 Future Ideas (Not Scheduled)
 
 - [ ] Task due dates and calendar view
+- [ ] IT Services: Project Analytics Dashboard (Budget vs Actuals, Health Status)
 - [ ] Email / in-app notifications on task assignment
 - [ ] Task comments / @mentions
 - [ ] Dark mode toggle

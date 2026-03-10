@@ -3,7 +3,56 @@ import React, { useState, useEffect } from 'react';
 import TaskCard, { TaskProps } from './TaskCard';
 import TaskModal from './TaskModal';
 import { useSession } from "next-auth/react";
-import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
+import {
+    DndContext,
+    DragOverlay,
+    closestCorners,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragStartEvent,
+    DragOverEvent,
+    DragEndEvent,
+    defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+    SortableContext,
+    arrayMove,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { useDroppable } from '@dnd-kit/core';
+
+// Helper component for Sortable Columns
+function DroppableColumn({ id, title, tasks, cssClass, activeId, onEdit }: any) {
+    const { setNodeRef } = useDroppable({ id });
+
+    return (
+        <section className={`board-column ${cssClass}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div className="column-header">
+                <h2 className="title-medium">{title}</h2>
+                <span className="task-count">{tasks.length}</span>
+            </div>
+            <SortableContext id={id} items={tasks.map((t: any) => t.id)} strategy={verticalListSortingStrategy}>
+                <div
+                    ref={setNodeRef}
+                    className="kanban-cards"
+                    style={{ flexGrow: 1, minHeight: '150px' }}
+                >
+                    {tasks.map((task: any, index: number) => (
+                        <TaskCard
+                            key={task.id}
+                            task={task}
+                            index={index}
+                            onEdit={() => onEdit(task)}
+                        />
+                    ))}
+                </div>
+            </SortableContext>
+        </section>
+    );
+}
 
 export default function KanbanBoard() {
     const { data: session } = useSession();
@@ -12,18 +61,27 @@ export default function KanbanBoard() {
     const [activeProject, setActiveProject] = useState<string | null>(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<any>(null);
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5, // 5px drag tolerance before starting
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     useEffect(() => {
         if (session) {
-            // Fetch user's projects
             fetch('/api/projects')
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
                         setProjects(data);
-                        if (data.length > 0) {
-                            setActiveProject(data[0].id);
-                        }
+                        if (data.length > 0) setActiveProject(data[0].id);
                     }
                 });
         }
@@ -31,118 +89,122 @@ export default function KanbanBoard() {
 
     const fetchTasks = () => {
         if (activeProject) {
-            // Fetch tasks for the active project
             fetch(`/api/tasks?projectId=${activeProject}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (Array.isArray(data)) setTasks(data);
+                    if (Array.isArray(data)) setTasks(data.sort((a: any, b: any) => (a.order || 0) - (b.order || 0)));
                 });
         }
     };
 
-    useEffect(() => {
-        fetchTasks();
-    }, [activeProject]);
+    useEffect(() => { fetchTasks(); }, [activeProject]);
 
-    const handleDragEnd = async (result: DropResult) => {
-        const { destination, source, draggableId } = result;
+    // Handle initial item drag
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
 
-        if (!destination) {
+    // Handle moving items across columns instantly
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const activeId = active.id;
+        const overId = over.id;
+
+        if (activeId === overId) return;
+
+        // active can only be a Task. over can be a Task OR a Column (droppable area).
+        const isActiveTask = active.data.current?.type === "Task";
+        const isOverTask = over.data.current?.type === "Task";
+
+        if (!isActiveTask) return;
+
+        setTasks((prev) => {
+            const activeIndex = prev.findIndex((t) => t.id === activeId);
+            const overIndex = prev.findIndex((t) => t.id === overId);
+
+            if (activeIndex === -1) return prev;
+
+            const activeTask = prev[activeIndex];
+
+            // 1. Dropping over another task
+            if (isOverTask) {
+                const overTask = prev[overIndex];
+                if (activeTask.status !== overTask.status) {
+                    // Changing columns
+                    const newTasks = [...prev];
+                    newTasks[activeIndex] = { ...newTasks[activeIndex], status: overTask.status };
+                    return arrayMove(newTasks, activeIndex, overIndex);
+                } else {
+                    // Sorting in same column
+                    return arrayMove(prev, activeIndex, overIndex);
+                }
+            }
+
+            // 2. Dropping over an empty column
+            const isOverColumn = overId === 'TODO' || overId === 'IN_PROGRESS' || overId === 'DONE';
+            if (isOverColumn) {
+                const newStatus = overId as string;
+                if (activeTask.status !== newStatus) {
+                    const newTasks = [...prev];
+                    newTasks[activeIndex] = { ...newTasks[activeIndex], status: newStatus };
+                    // Move to the end of the new array
+                    return arrayMove(newTasks, activeIndex, newTasks.length - 1);
+                }
+            }
+
+            return prev;
+        });
+    };
+
+    // Finalize drag, calculate new order, trigger API
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveId(null);
+
+        if (!over) {
+            fetchTasks(); // Revert on invalid drop
             return;
         }
 
-        // Check if dropped in the same position
-        if (destination.droppableId === source.droppableId && destination.index === source.index) {
-            return;
-        }
+        const activeId = active.id;
+        const activeTask = tasks.find(t => t.id === activeId);
+        if (!activeTask) return;
 
-        // Find the moved task
-        const movedTask = tasks.find(t => t.id === draggableId);
-        if (!movedTask) return;
+        // Calculate the new order logic based on current visually sorted array
+        const destColumnTasks = tasks.filter(t => t.status === activeTask.status);
+        const currentIndex = destColumnTasks.findIndex(t => t.id === activeId);
 
-        // Create a new array of tasks to manipulate for optimistic UI update
-        let updatedTasks = Array.from(tasks);
-
-        // Remove the task from its original position
-        updatedTasks = updatedTasks.filter(t => t.id !== draggableId);
-
-        // Get the destination column tasks, sorted by order
-        const destColumnTasks = updatedTasks
-            .filter(t => t.status === destination.droppableId)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        // Calculate the new order value
         let newOrder = 0;
-        if (destColumnTasks.length === 0) {
-            newOrder = 1000; // First item in column
-        } else if (destination.index === 0) {
-            newOrder = (destColumnTasks[0].order || 1000) / 2; // Before first item
-        } else if (destination.index >= destColumnTasks.length) {
-            newOrder = (destColumnTasks[destColumnTasks.length - 1].order || 0) + 1000; // After last item
+        if (destColumnTasks.length === 1) {
+            newOrder = 1000;
+        } else if (currentIndex === 0) {
+            newOrder = (destColumnTasks[1]?.order || 1000) / 2;
+        } else if (currentIndex === destColumnTasks.length - 1) {
+            newOrder = (destColumnTasks[currentIndex - 1]?.order || 0) + 1000;
         } else {
-            // Between two items
-            const prevOrder = destColumnTasks[destination.index - 1].order || 0;
-            const nextOrder = destColumnTasks[destination.index].order || 0;
+            const prevOrder = destColumnTasks[currentIndex - 1]?.order || 0;
+            const nextOrder = destColumnTasks[currentIndex + 1]?.order || 0;
             newOrder = (prevOrder + nextOrder) / 2;
         }
 
-        // Optimistically update the UI
-        const updatedTask = { ...movedTask, status: destination.droppableId, order: newOrder };
-        updatedTasks.push(updatedTask);
-        setTasks(updatedTasks);
+        // Optimistic update
+        setTasks(prev => prev.map(t => t.id === activeId ? { ...t, order: newOrder } : t));
 
-        // Persist to API
         try {
             await fetch(`/api/tasks`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: draggableId, status: destination.droppableId, order: newOrder })
+                body: JSON.stringify({ id: activeId, status: activeTask.status, order: newOrder })
             });
         } catch (error) {
-            console.error("Failed to update task order", error);
-            // Optionally revert UI state here on failure
-            fetchTasks();
+            console.error("Failed to persist task state", error);
+            fetchTasks(); // Reload on failure
         }
     };
 
-    const renderColumn = (title: string, statusId: string, cssClass: string) => {
-        const columnTasks = tasks
-            .filter(t => t.status === statusId)
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-        return (
-            <Droppable droppableId={statusId}>
-                {(provided, snapshot) => (
-                    <section
-                        className={`board-column ${cssClass}`}
-                        style={{
-                            display: 'flex', flexDirection: 'column', height: '100%',
-                            backgroundColor: snapshot.isDraggingOver ? 'var(--sys-color-surface-container)' : undefined
-                        }}
-                    >
-                        <div className="column-header">
-                            <h2 className="title-medium">{title}</h2>
-                            <span className="task-count">{columnTasks.length}</span>
-                        </div>
-                        <div
-                            className="kanban-cards"
-                            style={{ flexGrow: 1, minHeight: '150px' }}
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                        >
-                            {columnTasks.map((task, index) => (
-                                // @ts-ignore
-                                <TaskCard key={task.id} task={task} index={index} onEdit={() => { setTaskToEdit(task); setIsTaskModalOpen(true); }} />
-                            ))}
-                            {provided.placeholder}
-                        </div>
-                    </section>
-                )}
-            </Droppable>
-        );
-    };
-
-    // Authentication is handled via middleware now
+    const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, backgroundColor: 'var(--sys-color-background)' }}>
@@ -157,23 +219,14 @@ export default function KanbanBoard() {
                         <select
                             className="custom-input"
                             style={{
-                                padding: '6px 32px 6px 12px',
-                                width: '100%',
-                                cursor: 'pointer',
-                                backgroundColor: 'transparent',
-                                border: '1px solid transparent',
-                                appearance: 'none',
-                                fontWeight: 600,
-                                margin: 0,
-                                fontSize: '18px'
+                                padding: '6px 32px 6px 12px', width: '100%', cursor: 'pointer', backgroundColor: 'transparent',
+                                border: '1px solid transparent', appearance: 'none', fontWeight: 600, margin: 0, fontSize: '18px'
                             }}
                             value={activeProject || ''}
                             onChange={e => setActiveProject(e.target.value)}
                         >
                             <option value="" disabled>Select a project...</option>
-                            {projects.map(p => (
-                                <option key={p.id} value={p.id}>{p.title}</option>
-                            ))}
+                            {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                         </select>
                         <span className="material-symbols-outlined" style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#6B778C' }}>
                             unfold_more
@@ -184,19 +237,45 @@ export default function KanbanBoard() {
 
             {/* Kanban Board Area */}
             {projects.length > 0 ? (
-                <DragDropContext onDragEnd={handleDragEnd}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCorners}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                >
                     <main className="board-container">
-                        {renderColumn('Ready to begin', 'TODO', 'column-todo')}
-                        {renderColumn('In Progress', 'IN_PROGRESS', 'column-inprogress')}
-                        {renderColumn('Done', 'DONE', 'column-done')}
+                        <DroppableColumn
+                            id="TODO" title="Ready to begin" cssClass="column-todo"
+                            tasks={tasks.filter(t => t.status === 'TODO')}
+                            onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
+                        />
+                        <DroppableColumn
+                            id="IN_PROGRESS" title="In Progress" cssClass="column-inprogress"
+                            tasks={tasks.filter(t => t.status === 'IN_PROGRESS')}
+                            onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
+                        />
+                        <DroppableColumn
+                            id="DONE" title="Done" cssClass="column-done"
+                            tasks={tasks.filter(t => t.status === 'DONE')}
+                            onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
+                        />
+
+                        {/* Drag Overlay for smooth visual dragging detached from layout */}
+                        <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) }}>
+                            {activeId && activeTask ? (
+                                <TaskCard task={activeTask} index={0} />
+                            ) : null}
+                        </DragOverlay>
 
                         <button className="fab" aria-label="Add new task" onClick={() => { setTaskToEdit(null); setIsTaskModalOpen(true); }}>
                             <span className="material-symbols-outlined">add</span>
                         </button>
                     </main>
-                </DragDropContext>
+                </DndContext>
             ) : (
                 <main className="board-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+                    {/* Empty State omitted for brevity here, keeping previous empty state design */}
                     <div style={{ textAlign: 'center', maxWidth: '400px', padding: '40px', backgroundColor: 'var(--sys-color-surface)', borderRadius: '24px', boxShadow: 'var(--sys-elevation-2)' }}>
                         <div style={{ width: '80px', height: '80px', backgroundColor: '#F4F5F7', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
                             <span className="material-symbols-outlined" style={{ fontSize: '40px', color: 'var(--sys-color-primary)' }}>rule_folder</span>
@@ -206,8 +285,7 @@ export default function KanbanBoard() {
                         <button
                             className="btn filled-btn"
                             style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
-                            onClick={() => setIsTaskModalOpen(false) /* Ensure any task modal is closed */}
-                            onMouseDown={() => { window.location.href = '/projects'; }}
+                            onClick={() => window.location.href = '/projects'}
                         >
                             <span className="material-symbols-outlined">add</span>
                             Create Your First Project
