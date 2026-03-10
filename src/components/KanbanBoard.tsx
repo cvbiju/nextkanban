@@ -25,14 +25,23 @@ import {
 import { useDroppable } from '@dnd-kit/core';
 
 // Helper component for Sortable Columns
-function DroppableColumn({ id, title, tasks, cssClass, activeId, onEdit }: any) {
+function DroppableColumn({ id, title, tasks, cssClass, activeId, onEdit, onAddTask }: any) {
     const { setNodeRef } = useDroppable({ id });
 
     return (
         <section className={`board-column ${cssClass}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div className="column-header">
-                <h2 className="title-medium">{title}</h2>
-                <span className="task-count">{tasks.length}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h2 className="title-medium">{title}</h2>
+                    <span className="task-count">{tasks.length}</span>
+                </div>
+                <button
+                    onClick={onAddTask}
+                    className="icon-btn small"
+                    title="Add task"
+                >
+                    <span className="material-symbols-outlined">add</span>
+                </button>
             </div>
             <SortableContext id={id} items={tasks.map((t: any) => t.id)} strategy={verticalListSortingStrategy}>
                 <div
@@ -61,6 +70,7 @@ export default function KanbanBoard() {
     const [activeProject, setActiveProject] = useState<string | null>(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState<any>(null);
+    const [newTaskStatus, setNewTaskStatus] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
 
     const sensors = useSensors(
@@ -249,16 +259,19 @@ export default function KanbanBoard() {
                             id="TODO" title="Ready to begin" cssClass="column-todo"
                             tasks={tasks.filter(t => t.status === 'TODO')}
                             onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
+                            onAddTask={() => { setNewTaskStatus('TODO'); setTaskToEdit(null); setIsTaskModalOpen(true); }}
                         />
                         <DroppableColumn
                             id="IN_PROGRESS" title="In Progress" cssClass="column-inprogress"
                             tasks={tasks.filter(t => t.status === 'IN_PROGRESS')}
                             onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
+                            onAddTask={() => { setNewTaskStatus('IN_PROGRESS'); setTaskToEdit(null); setIsTaskModalOpen(true); }}
                         />
                         <DroppableColumn
                             id="DONE" title="Done" cssClass="column-done"
                             tasks={tasks.filter(t => t.status === 'DONE')}
                             onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
+                            onAddTask={() => { setNewTaskStatus('DONE'); setTaskToEdit(null); setIsTaskModalOpen(true); }}
                         />
 
                         {/* Drag Overlay for smooth visual dragging detached from layout */}
@@ -267,10 +280,6 @@ export default function KanbanBoard() {
                                 <TaskCard task={activeTask} index={0} />
                             ) : null}
                         </DragOverlay>
-
-                        <button className="fab" aria-label="Add new task" onClick={() => { setTaskToEdit(null); setIsTaskModalOpen(true); }}>
-                            <span className="material-symbols-outlined">add</span>
-                        </button>
                     </main>
                 </DndContext>
             ) : (
@@ -297,11 +306,12 @@ export default function KanbanBoard() {
             {activeProject && (
                 <TaskModal
                     isOpen={isTaskModalOpen}
-                    onClose={() => { setIsTaskModalOpen(false); setTaskToEdit(null); }}
+                    onClose={() => { setIsTaskModalOpen(false); setTaskToEdit(null); setNewTaskStatus(null); }}
                     projectId={activeProject}
                     projectMembers={projects.find(p => p.id === activeProject)?.members || []}
                     onTaskSaved={fetchTasks}
                     taskToEdit={taskToEdit}
+                    initialStatus={newTaskStatus || undefined}
                 />
             )}
         </div>

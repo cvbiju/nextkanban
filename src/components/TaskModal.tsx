@@ -9,9 +9,10 @@ interface TaskModalProps {
     projectMembers: any[];
     onTaskSaved: () => void;
     taskToEdit?: any;
+    initialStatus?: string;
 }
 
-export default function TaskModal({ isOpen, onClose, projectId, projectMembers, onTaskSaved, taskToEdit }: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, projectId, projectMembers, onTaskSaved, taskToEdit, initialStatus }: TaskModalProps) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState('low');
@@ -123,7 +124,7 @@ export default function TaskModal({ isOpen, onClose, projectId, projectMembers, 
                     title,
                     description,
                     priority,
-                    ...(isEditing ? {} : { status: 'TODO' }),
+                    ...(isEditing ? {} : { status: initialStatus || 'TODO' }),
                     assigneeId: assigneeId || null,
                     startDate: startDate || null,
                     dueDate: dueDate || null,
