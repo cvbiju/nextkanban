@@ -19,6 +19,9 @@ export interface TaskProps {
         actualHours?: number | null;
         taskCategory?: string | null;
         isBillable?: boolean;
+        _count?: {
+            notes: number;
+        };
     };
     index: number;
     onEdit?: () => void;
@@ -110,13 +113,20 @@ export default function TaskCard({ task, index, onEdit }: TaskProps) {
 
                 {/* Footer: Hours & Assignee */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '4px' }}>
-                    <div style={{ flex: 1 }}>
-                        {(task.estimatedHours || task.actualHours) ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-color-on-surface-variant)', fontSize: '12px', fontWeight: 500 }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {(task.estimatedHours || task.actualHours) && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-color-on-surface-variant)', fontSize: '12px', fontWeight: 500 }} title="Hours (Actual / Estimated)">
                                 <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span>
                                 {task.actualHours || 0}{task.estimatedHours ? ` / ${task.estimatedHours}` : ''}h
                             </div>
-                        ) : (
+                        )}
+                        {(task._count?.notes ?? 0) > 0 && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--sys-color-on-surface-variant)', fontSize: '12px', fontWeight: 500 }} title={`${task._count?.notes} Notes`}>
+                                <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>chat_bubble</span>
+                                {task._count?.notes}
+                            </div>
+                        )}
+                        {!(task.estimatedHours || task.actualHours) && !(task._count?.notes ?? 0) && (
                             <div style={{ height: '20px' }}></div> /* Spacer to keep avatar aligned */
                         )}
                     </div>

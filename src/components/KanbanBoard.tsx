@@ -35,13 +35,21 @@ function DroppableColumn({ id, title, tasks, cssClass, activeId, onEdit, onAddTa
                     <h2 className="title-medium">{title}</h2>
                     <span className="task-count">{tasks.length}</span>
                 </div>
-                <button
-                    onClick={onAddTask}
-                    className="icon-btn small"
-                    title="Add task"
-                >
-                    <span className="material-symbols-outlined">add</span>
-                </button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                        onClick={onAddTask}
+                        className="icon-btn small"
+                        title="Add task"
+                    >
+                        <span className="material-symbols-outlined">add</span>
+                    </button>
+                    <button
+                        className="icon-btn small"
+                        title="Column actions"
+                    >
+                        <span className="material-symbols-outlined">more_vert</span>
+                    </button>
+                </div>
             </div>
             <SortableContext id={id} items={tasks.map((t: any) => t.id)} strategy={verticalListSortingStrategy}>
                 <div
@@ -72,6 +80,8 @@ export default function KanbanBoard() {
     const [taskToEdit, setTaskToEdit] = useState<any>(null);
     const [newTaskStatus, setNewTaskStatus] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [myTasksOnly, setMyTasksOnly] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -216,6 +226,12 @@ export default function KanbanBoard() {
 
     const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
 
+    const filteredTasks = tasks.filter(task => {
+        const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesUser = myTasksOnly ? (task.assignee as any)?.id === (session?.user as any)?.id : true;
+        return matchesSearch && matchesUser;
+    });
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, backgroundColor: 'var(--sys-color-background)' }}>
             {/* Project Selector Header Area */}
@@ -230,7 +246,7 @@ export default function KanbanBoard() {
                             className="custom-input"
                             style={{
                                 padding: '6px 32px 6px 12px', width: '100%', cursor: 'pointer', backgroundColor: 'transparent',
-                                border: '1px solid transparent', appearance: 'none', fontWeight: 600, margin: 0, fontSize: '18px'
+                                border: '1px solid transparent', appearance: 'none', fontWeight: 600, margin: 0, fontSize: '16px'
                             }}
                             value={activeProject || ''}
                             onChange={e => setActiveProject(e.target.value)}
@@ -245,6 +261,40 @@ export default function KanbanBoard() {
                 </div>
             </div>
 
+            {/* Quick Filter Bar */}
+            {activeProject && projects.length > 0 && (
+                <div style={{ padding: '12px 32px', borderBottom: '1px solid var(--sys-color-outline-variant)', backgroundColor: 'var(--sys-color-surface)', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', width: '300px' }}>
+                        <span className="material-symbols-outlined" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--sys-color-on-surface-variant)', fontSize: '18px', pointerEvents: 'none' }}>
+                            search
+                        </span>
+                        <input
+                            type="text"
+                            className="custom-input"
+                            placeholder="Search tasks..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ paddingLeft: '38px', backgroundColor: 'var(--sys-color-surface-variant)', border: 'none', height: '36px', width: '100%', fontSize: '14px' }}
+                        />
+                    </div>
+                    <button
+                        className={`btn ${myTasksOnly ? 'filled-btn' : 'outlined-btn'}`}
+                        onClick={() => setMyTasksOnly(!myTasksOnly)}
+                        style={{ padding: '0 16px', height: '36px', borderRadius: '18px', fontSize: '13px', display: 'flex', alignItems: 'center' }}
+                    >
+                        <span className="material-symbols-outlined" style={{ fontSize: '16px', marginRight: '6px' }}>
+                            person
+                        </span>
+                        My Tasks
+                    </button>
+                    {(searchTerm || myTasksOnly) && (
+                        <div style={{ fontSize: '13px', color: 'var(--sys-color-on-surface-variant)', marginLeft: 'auto' }}>
+                            Showing {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Kanban Board Area */}
             {projects.length > 0 ? (
                 <DndContext
@@ -257,19 +307,19 @@ export default function KanbanBoard() {
                     <main className="board-container">
                         <DroppableColumn
                             id="TODO" title="Ready to begin" cssClass="column-todo"
-                            tasks={tasks.filter(t => t.status === 'TODO')}
+                            tasks={filteredTasks.filter(t => t.status === 'TODO')}
                             onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
                             onAddTask={() => { setNewTaskStatus('TODO'); setTaskToEdit(null); setIsTaskModalOpen(true); }}
                         />
                         <DroppableColumn
                             id="IN_PROGRESS" title="In Progress" cssClass="column-inprogress"
-                            tasks={tasks.filter(t => t.status === 'IN_PROGRESS')}
+                            tasks={filteredTasks.filter(t => t.status === 'IN_PROGRESS')}
                             onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
                             onAddTask={() => { setNewTaskStatus('IN_PROGRESS'); setTaskToEdit(null); setIsTaskModalOpen(true); }}
                         />
                         <DroppableColumn
                             id="DONE" title="Done" cssClass="column-done"
-                            tasks={tasks.filter(t => t.status === 'DONE')}
+                            tasks={filteredTasks.filter(t => t.status === 'DONE')}
                             onEdit={(task: any) => { setTaskToEdit(task); setIsTaskModalOpen(true); }}
                             onAddTask={() => { setNewTaskStatus('DONE'); setTaskToEdit(null); setIsTaskModalOpen(true); }}
                         />
